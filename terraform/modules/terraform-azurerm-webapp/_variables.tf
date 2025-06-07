@@ -39,8 +39,8 @@ variable "sku_name" {
   type        = string
 }
 
-variable "python_version" {
-  description = "Python version for the Web App"
+variable "node_version" {
+  description = "Node version for the Web App"
   type        = string
 }
 

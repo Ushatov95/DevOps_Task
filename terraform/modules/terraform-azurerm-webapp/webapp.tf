@@ -14,9 +14,11 @@ resource "azurerm_linux_web_app" "app" {
 
   site_config {
     application_stack {
-      python_version = var.python_version
+      node_version = var.node_version
     }
   }
+
+  depends_on = [ azurerm_service_plan.plan ]
 }
 
 resource "azurerm_monitor_autoscale_setting" "web_autoscale" {
