@@ -10,10 +10,10 @@ output "aps_name" {
 
 output "funapp_id" {
   description = "The ID of the web application"
-  value       = azurerm_linux_web_app.webapp.id
+  value       = azurerm_linux_function_app.func_table_writer.id
 }
 
 output "funapp_name" {
   description = "The name of the web application"
-  value       = azurerm_linux_web_app.webapp.name
+  value       = azurerm_linux_function_app.func_table_writer.name
 }

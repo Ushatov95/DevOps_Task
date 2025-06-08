@@ -44,10 +44,35 @@ variable "storage_account_name" {
   type        = string
 }
 
-variable "storage_account_access_key" {
-  description = "Access key for the Storage Account"
+variable "storage_account_id" {
+  description = "ID of the Storage Account to be used by the Function App"
   type        = string
-  sensitive   = true
+}
+
+variable "network_id" {
+  description = "ID of the Virtual Network to which the Function App will connect"
+  type        = string
+}
+
+variable "TABLE_STORAGE_NAME" {
+  description = "Name of the Table Storage to be used by the Function App"
+  type        = string
+}
+
+variable "TABLE_STORAGE_URL" {
+  description = "URL of the Table Storage to be used by the Function App"
+  type        = string
+}
+
+variable "python_version" {
+  description = "Python version for the Function App"
+  type        = string
+}
+
+variable "app_settings" {
+  description = "App settings to configure on the Web App"
+  type        = map(string)
+  default     = {}
 }
 
 variable "tags" {
