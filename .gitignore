@@ -1,5 +1,6 @@
 # Local .terraform directories
 .terraform/
+.terraform.lock.hcl
 
 # .tfstate files
 *.tfstate
@@ -57,3 +58,6 @@ ENV/
 # Ignore OS files
 .DS_Store
 Thumbs.db
+
+# Ignore node_modules dir for WEBSITE_RUN_FROM_PACKAGE setting in Azure App Service
+node_modules/

@@ -1,3 +1,8 @@
+variable "subscription_id" {
+  description = "Azure Subscription ID where resources will be deployed"
+  type        = string
+}
+
 variable "funapp_name" {
   description = "Name of the Function App"
   type        = string
@@ -46,11 +51,6 @@ variable "storage_account_name" {
 
 variable "storage_account_id" {
   description = "ID of the Storage Account to be used by the Function App"
-  type        = string
-}
-
-variable "network_id" {
-  description = "ID of the Virtual Network to which the Function App will connect"
   type        = string
 }
 

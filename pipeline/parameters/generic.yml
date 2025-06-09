@@ -1,0 +1,6 @@
+variables:
+  serviceConnectionName: 'zetta-sp'
+  backendAzureRmResourceGroupName: 'zetta-terraform-state'
+  backendAzureRmStorageAccountName: 'zettaterraformstatedevopstask1'
+  backendAzureRmContainerName: 'terraform-state'
+  notifyUsers: ''  # Replace with actual approvers 

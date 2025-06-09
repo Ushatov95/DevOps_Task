@@ -1,0 +1,97 @@
+trigger:
+- none
+
+pool:
+  vmImage: 'ubuntu-latest'
+
+parameters:
+  - name: environment
+    type: string
+    default: 'dev'
+    values:
+      - dev
+      - acc
+      - prd
+  - name: task
+    type: string
+    default: 'task_1'
+    values:
+      - task_1
+      - task_2
+
+variables:
+  - template: ./pipeline/parameters/generic.yml
+  - name: workingDirectory
+    value: 'terraform/$(task)_infra'
+  - name: tfvarsFile
+    value: 'environments/$(environment).tfvars'
+
+stages:
+- stage: InfrastructureDeploy
+  displayName: 'Infrastructure Deployment'
+  jobs:
+    - job: TerraformPlan
+      displayName: 'Terraform Plan'
+      steps:
+        - task: TerraformInstaller@1
+          inputs:
+            terraformVersion: 'latest'
+        
+        - task: TerraformTaskV4@4
+          inputs:
+            provider: 'azurerm'
+            command: 'init'
+            workingDirectory: '$(workingDirectory)'
+            backendServiceArm: '$(serviceConnectionName)'
+            backendAzureRmResourceGroupName: '$(backendAzureRmResourceGroupName)'
+            backendAzureRmStorageAccountName: '$(backendAzureRmStorageAccountName)'
+            backendAzureRmContainerName: '$(backendAzureRmContainerName)'
+            backendAzureRmKey: '$(task)_$(environment).tfstate'
+
+        - task: TerraformTaskV4@4
+          inputs:
+            provider: 'azurerm'
+            command: 'plan'
+            workingDirectory: '$(workingDirectory)'
+            environmentServiceNameAzureRM: '$(serviceConnectionName)'
+            varFiles: '$(tfvarsFile)'
+
+    - job: ManualValidation
+      displayName: 'Wait for Approval'
+      dependsOn: TerraformPlan
+      condition: succeeded()
+      pool: server
+      steps:
+        - task: ManualValidation@0
+          inputs:
+            notifyUsers: '$(notifyUsers)'
+            instructions: 'Please review the Terraform plan and approve the deployment'
+            onTimeout: 'reject'
+
+    - job: TerraformApply
+      displayName: 'Terraform Apply'
+      dependsOn: ManualValidation
+      condition: succeeded()
+      steps:
+        - task: TerraformInstaller@1
+          inputs:
+            terraformVersion: 'latest'
+        
+        - task: TerraformTaskV4@4
+          inputs:
+            provider: 'azurerm'
+            command: 'init'
+            workingDirectory: '$(workingDirectory)'
+            backendServiceArm: '$(serviceConnectionName)'
+            backendAzureRmResourceGroupName: '$(backendAzureRmResourceGroupName)'
+            backendAzureRmStorageAccountName: '$(backendAzureRmStorageAccountName)'
+            backendAzureRmContainerName: '$(backendAzureRmContainerName)'
+            backendAzureRmKey: '$(task)_$(environment).tfstate'
+
+        - task: TerraformTaskV4@4
+          inputs:
+            provider: 'azurerm'
+            command: 'apply'
+            workingDirectory: '$(workingDirectory)'
+            environmentServiceNameAzureRM: '$(serviceConnectionName)'
+            varFiles: '$(tfvarsFile)'

@@ -1,5 +1,3 @@
-data "azurerm_client_config" "current" {}
-
 resource "random_string" "suffix" {
   length  = 4
   upper   = false
@@ -21,15 +19,15 @@ module "function_app" {
   storage_account_id = module.app_storage_account.id
   TABLE_STORAGE_NAME = azurerm_storage_table.function_table.name
   TABLE_STORAGE_URL = "https://${module.app_storage_account.name}.table.core.windows.net"
-  network_id = module.network.vnet_id
+  subscription_id = "/subscriptions/${data.azurerm_client_config.current.subscription_id}"
 
   app_settings = {
     AzureWebJobsStorage = "UseManagedIdentity=true;Endpoint=https://${module.app_storage_account.name}.table.core.windows.net"
-    FUNCTIONS_WORKER_RUNTIME = "python"
+    AzureWebJobsSecretStorageType = "Files"
     AZURE_SUBSCRIPTION_ID = data.azurerm_client_config.current.subscription_id
     AZURE_TENANT_ID = data.azurerm_client_config.current.tenant_id
-    TABLE_STORAGE_NAME = azurerm_storage_table.function_table.name
-    TABLE_STORAGE_URL = "https://${module.app_storage_account.name}.table.core.windows.net"
+    STORAGE_TABLE_NAME = azurerm_storage_table.function_table.name
+    STORAGE_ACCOUNT_NAME = module.app_storage_account.name
   }
 
   tags = {
@@ -37,18 +35,4 @@ module "function_app" {
   }
 
   depends_on = [ module.app_storage_account ]
-}
-
-resource "time_sleep" "wait_for_functionapp" {
-  depends_on = [module.function_app]
-  create_duration = "60s"
-}
-
-# Create a zip file for deployment since there was issue in using zip_file directly in the module
-resource "null_resource" "deploy_zip" {
-  depends_on = [time_sleep.wait_for_functionapp]
-
-  provisioner "local-exec" {
-    command = "az functionapp deployment source config-zip --resource-group ${module.app-rg.name} --name ${module.function_app.funapp_name} --src ./funcapp.zip"
-  }
 }
