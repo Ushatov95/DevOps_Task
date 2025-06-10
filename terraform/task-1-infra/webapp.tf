@@ -16,25 +16,7 @@ module "web_app" {
   os_type              = "Linux"
   node_version         = "20-lts"
 
-  app_settings = {
-    "WEBSITE_RUN_FROM_PACKAGE" = "1"
-  }
-
   tags = {
     environment = "DevOps_Task_1"
-  }
-}
-
-resource "time_sleep" "wait_for_appservice" {
-  depends_on = [module.web_app]
-  create_duration = "60s"
-}
-
-# Create a zip file for deployment since there was issue in using zip_file directly in the module
-resource "null_resource" "deploy_zip" {
-  depends_on = [time_sleep.wait_for_appservice]
-
-  provisioner "local-exec" {
-    command = "az webapp deploy --resource-group ${module.web-rg.name} --name ${module.web_app.webapp_name} --src-path ./app.zip --type zip"
   }
 }

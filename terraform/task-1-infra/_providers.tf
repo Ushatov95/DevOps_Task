@@ -5,10 +5,9 @@ terraform {
         version = "~>4.0.0"
         }
     }
+    backend "azurerm" {}
 }
 
-##TODO: Remove the subscription_id since we are going to use ADO SC
 provider "azurerm" {
-    subscription_id = var.subscription_id
     features {}
 }

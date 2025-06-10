@@ -21,6 +21,17 @@ resource "azurerm_linux_web_app" "app" {
   depends_on = [ azurerm_service_plan.plan ]
 }
 
+#  Deploy code from a public GitHub repo
+resource "azurerm_app_service_source_control" "sourcecontrol" {
+  app_id             = azurerm_linux_web_app.app.id
+  repo_url           = "https://github.com/Ushatov95/SampleWebApp"
+  branch             = "main"
+  use_manual_integration = true
+  use_mercurial      = false
+
+  depends_on = [ azurerm_linux_web_app.app ]
+}
+
 resource "azurerm_monitor_autoscale_setting" "web_autoscale" {
   name                = "${var.environment}-${var.region}-${var.app_name}-autoscale"
   resource_group_name = var.resource_group_name

@@ -1,15 +1,3 @@
-##TODO: Remove tenant_id and sub_id since we are going to use ADO SC
-variable "tenant_id" {
-  description = "Tenant ID of the Azure account"
-  type = string
-  default = "65985761-7f3d-42b8-b6d6-661f46cd95eb"
-}
-
-variable "subscription_id" {
-  description = "Subscription ID of the Azure account where resources will be created"
-  type = string
-}
-
 variable "location" {
   description = "Location of the Azure resources"
   type = string

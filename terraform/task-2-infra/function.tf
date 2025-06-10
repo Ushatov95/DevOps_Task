@@ -24,7 +24,7 @@ module "function_app" {
   app_settings = {
     AzureWebJobsStorage = "UseManagedIdentity=true;Endpoint=https://${module.app_storage_account.name}.table.core.windows.net"
     AzureWebJobsSecretStorageType = "Files"
-    AZURE_SUBSCRIPTION_ID = data.azurerm_client_config.current.subscription_id
+    AZURE_SUBSCRIPTION_ID = data.azurerm_client_config.current.subscription_id #this might need to be changed
     AZURE_TENANT_ID = data.azurerm_client_config.current.tenant_id
     STORAGE_TABLE_NAME = azurerm_storage_table.function_table.name
     STORAGE_ACCOUNT_NAME = module.app_storage_account.name

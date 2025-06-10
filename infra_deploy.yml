@@ -12,19 +12,30 @@ parameters:
       - dev
       - acc
       - prd
-  - name: task
+  - name: infra_to_deploy
     type: string
-    default: 'task_1'
+    default: 'task-1'
     values:
-      - task_1
-      - task_2
+      - task-1
+      - task-2
 
 variables:
-  - template: ./pipeline/parameters/generic.yml
+  - name: serviceConnectionName
+    value: 'zetta-sp'
+  - name: backendAzureRmResourceGroupName
+    value: 'zetta-terraform-state'
+  - name: backendAzureRmStorageAccountName
+    value: 'zettatfstatedevopstask'
+  - name: backendAzureRmContainerName
+    value: 'zettatfstate$-{{ parameters.infra_to_deploy }}'
+  - name: notifyUsers
+    value: ''  # Replace with actual approvers
   - name: workingDirectory
-    value: 'terraform/$(task)_infra'
-  - name: tfvarsFile
-    value: 'environments/$(environment).tfvars'
+    value: '$(System.DefaultWorkingDirectory)/terraform/${{ parameters.infra_to_deploy }}-infra'
+  - name: containerName
+    value: 'zettatfstate-${{ parameters.infra_to_deploy }}'
+  - name: stateKey
+    value: '${{ parameters.infra_to_deploy }}-${{ parameters.environment }}.tfstate'
 
 stages:
 - stage: InfrastructureDeploy
@@ -34,10 +45,13 @@ stages:
       displayName: 'Terraform Plan'
       steps:
         - task: TerraformInstaller@1
+          displayName: 'Install Terraform'
           inputs:
-            terraformVersion: 'latest'
-        
+            terraformVersion: '1.12.1'
+          condition: succeeded()
+
         - task: TerraformTaskV4@4
+          displayName: 'Terraform Init'
           inputs:
             provider: 'azurerm'
             command: 'init'
@@ -45,16 +59,24 @@ stages:
             backendServiceArm: '$(serviceConnectionName)'
             backendAzureRmResourceGroupName: '$(backendAzureRmResourceGroupName)'
             backendAzureRmStorageAccountName: '$(backendAzureRmStorageAccountName)'
-            backendAzureRmContainerName: '$(backendAzureRmContainerName)'
-            backendAzureRmKey: '$(task)_$(environment).tfstate'
+            backendAzureRmContainerName: 'zettatfstate-${{ parameters.infra_to_deploy }}'
+            backendAzureRmKey: '$(stateKey)'
 
         - task: TerraformTaskV4@4
+          displayName: 'Terraform Validate'
+          inputs:
+            provider: 'azurerm'
+            command: 'validate'
+            workingDirectory: '$(workingDirectory)'
+
+        - task: TerraformTaskV4@4
+          displayName: 'Terraform Plan'
           inputs:
             provider: 'azurerm'
             command: 'plan'
             workingDirectory: '$(workingDirectory)'
             environmentServiceNameAzureRM: '$(serviceConnectionName)'
-            varFiles: '$(tfvarsFile)'
+            commandOptions: '-var-file="../environments/${{ parameters.environment }}.tfvars"'
 
     - job: ManualValidation
       displayName: 'Wait for Approval'
@@ -73,11 +95,13 @@ stages:
       dependsOn: ManualValidation
       condition: succeeded()
       steps:
+
         - task: TerraformInstaller@1
           inputs:
             terraformVersion: 'latest'
         
         - task: TerraformTaskV4@4
+          displayName: 'Terraform Init'
           inputs:
             provider: 'azurerm'
             command: 'init'
@@ -85,13 +109,14 @@ stages:
             backendServiceArm: '$(serviceConnectionName)'
             backendAzureRmResourceGroupName: '$(backendAzureRmResourceGroupName)'
             backendAzureRmStorageAccountName: '$(backendAzureRmStorageAccountName)'
-            backendAzureRmContainerName: '$(backendAzureRmContainerName)'
-            backendAzureRmKey: '$(task)_$(environment).tfstate'
+            backendAzureRmContainerName: '$(containerName)'
+            backendAzureRmKey: '$(stateKey)'
 
         - task: TerraformTaskV4@4
+          displayName: 'Terraform Apply'
           inputs:
             provider: 'azurerm'
             command: 'apply'
             workingDirectory: '$(workingDirectory)'
             environmentServiceNameAzureRM: '$(serviceConnectionName)'
-            varFiles: '$(tfvarsFile)'
+            commandOptions: '-var-file="../environments/${{ parameters.environment }}.tfvars"'
